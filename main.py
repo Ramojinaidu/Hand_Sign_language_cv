@@ -13,9 +13,11 @@ while True:
     if k == ord("q"):
         break
 
-    img_f= cv.flip(img, 1)
-    img_l = detector.draw_landmarks(img_f)
-    cv.imshow("video",img_l)
+
+    img_l = detector.draw_detection(img,True,True)
+    img_f= cv.flip(img_l, 1)
+
+    cv.imshow("video",img_f)
    
 frame.release()
 cv.destroyAllWindows()
