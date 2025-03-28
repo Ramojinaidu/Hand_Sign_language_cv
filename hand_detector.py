@@ -1,18 +1,19 @@
+import math
+
 import cv2 as cv
 import mediapipe as mp
 import numpy as np
+from mediapipe.framework.formats import landmark_pb2
+from mediapipe.python import solutions
+from mediapipe.python.solutions import drawing_utils
+from mediapipe.python.solutions.hands import HAND_CONNECTIONS
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
-from mediapipe.python.solutions.hands import HAND_CONNECTIONS
-from mediapipe.framework.formats import landmark_pb2
-from mediapipe.python.solutions import drawing_utils
 from mediapipe.tasks.python.components.containers import NormalizedLandmark
-from mediapipe.python import solutions
-import math
 
 
 class Hand_detector:
-    __BASE_MODEL: str = "model/hand_landmarker.task"
+    __BASE_MODEL: str = "models/hand_landmarker.task"
 
     def __init__(self,
                  num_hands: int = 1,
@@ -22,6 +23,7 @@ class Hand_detector:
                  model: str = __BASE_MODEL):
         self.handedness = None
         self.bbox_data = []
+        self.bbox_colour = (0,0,255)
         self.hand_landmark_list = None
         self.landmarks_result = None
         self.num_hands: int = num_hands
@@ -30,6 +32,7 @@ class Hand_detector:
         self.min_tracking_confidence: float = min_tracking_confidence
         self.model = model
         self.image = None
+        self.draw_landmarks = True
         self.bbox_offset_x = 0
         self.bbox_offset_y = 0
 
@@ -51,7 +54,7 @@ class Hand_detector:
         landmarks = self.detector.detect(mp_img)
         return landmarks
 
-    def draw_detection(self, img: np.ndarray = None,draw_landmarks:bool=True):
+    def draw_detection(self, img: np.ndarray = None):
         self.image =img
         self.landmarks_result = self.get_landmarks(self.image)
         self.hand_landmark_list = self.landmarks_result.hand_landmarks
@@ -62,7 +65,7 @@ class Hand_detector:
 
 
 
-        if draw_landmarks:
+        if self.draw_landmarks:
             for idx in range(len(self.hand_landmark_list)):
                 hand_land_marks = self.hand_landmark_list[idx]
                 land_marks = landmark_pb2.NormalizedLandmarkList()
@@ -94,8 +97,7 @@ class Hand_detector:
 
             # Draw the rectangle
             if draw_box:
-                cv.rectangle(self.image, pts_min, pts_max, (0, 0, 255), thickness=2,
-                             lineType=cv.LINE_8)  # Changed color to red for better visibility
+                cv.rectangle(self.image, pts_min, pts_max, self.bbox_colour, thickness=2, lineType=cv.LINE_8)  # Changed color to red for better visibility
 
     def get_detected_image(self,flip : bool = True):
         if flip: self.image = cv.flip(self.image, 1)
